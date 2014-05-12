@@ -13,24 +13,24 @@ import android.util.Log;
 
 public class BluetoothTTSService extends IntentService {
 	private static final String TAG = "BluetoothTTSService";
-	private BluetoothAdapter btAdapter = null;
-	private BluetoothSocket btSocket = null;
+	private BluetoothAdapter btAdapter;
+	private BluetoothSocket btSocket;
 	private static final UUID MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-	
+
 	private StringBuilder sb = new StringBuilder();
 	private TextToSpeech tts;
 	private boolean ttsStatus = false;
-	
-	// TODO: not hardcode the MAC address
-	// private static String address = "00:1B:DC:00:03:47"; // gallium
-	private static String address = "EC:55:F9:F1:BF:E2"; // flappie
-	
+	private String address;
+
 	public BluetoothTTSService() {
 		super("BluetoothTTSService");
 	}
-	
+
 	@Override
 	protected void onHandleIntent(Intent intent) {
+		address = intent.getStringExtra("address");
+		Log.i(TAG, "address: " + address);
+
 		tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
 			@Override
 			public void onInit(int status) {
@@ -41,19 +41,17 @@ public class BluetoothTTSService extends IntentService {
 				}
 			}
 		});
-		
+
 		btAdapter = BluetoothAdapter.getDefaultAdapter();
-		
+
 		if (btAdapter == null) {
 			Log.e(TAG, "Bluetooth not supported");
 			Log.i(TAG, "exiting");
 			return;
-		}
-		else {
+		} else {
 			if (btAdapter.isEnabled()) {
 				Log.i(TAG, "Bluetooth ON");
-			}
-			else {
+			} else {
 				Log.i(TAG, "Bluetooth OFF");
 				Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 				startActivity(enableBtIntent);
@@ -61,47 +59,44 @@ public class BluetoothTTSService extends IntentService {
 				return;
 			}
 		}
-		
+
 		BluetoothDevice device = btAdapter.getRemoteDevice(address);
-		
+
 		try {
 			btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			Log.e(TAG, "socket create failed: " + e.getMessage() + ".");
 			Log.i(TAG, "exiting");
 			return;
 		}
-		
+
 		btAdapter.cancelDiscovery();
-		
+
 		try {
 			btSocket.connect();
 			Log.i(TAG, "Connection ok");
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			try {
 				btSocket.close();
 				Log.e(TAG, "connection failure: " + e.getMessage() + ".");
 				Log.i(TAG, "exiting");
 				return;
-			}
-			catch (IOException e2) {
+			} catch (IOException e2) {
 				Log.e(TAG, "unable to close socket during connection failure: " + e.getMessage() + ".");
 				Log.i(TAG, "exiting");
 				return;
 			}
 		}
-		
+
 		byte[] buffer = new byte[256]; // buffer store for the stream
 		int bytes;
-		
+
 		Log.i(TAG, "Entering loop...");
-		
+
 		while (true) {
 			try {
 				bytes = btSocket.getInputStream().read(buffer);
-				
+
 				byte[] readBuf = (byte[]) buffer;
 				String strIncom = new String(readBuf, 0, bytes);
 				sb.append(strIncom);
@@ -110,18 +105,29 @@ public class BluetoothTTSService extends IntentService {
 					String sbprint = sb.substring(0, endOfLineIndex);
 					sb.delete(0, sb.length());
 					Log.i(TAG, "String:\n" + sbprint);
-					if(ttsStatus) {
+					if (ttsStatus) {
 						tts.speak(sbprint, TextToSpeech.QUEUE_FLUSH, null);
 					}
 					Log.i(TAG, "TTS: " + String.valueOf(ttsStatus));
 				}
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 				Log.e(TAG, "connection closed during loop.");
+				try {
+					btSocket.getInputStream().close();
+					btSocket.getOutputStream().close();
+				} catch (IOException e1) {
+					Log.e(TAG, "cannot close streams");
+				}
+				try {
+					btSocket.close();
+				} catch (IOException e1) {
+					Log.e(TAG, "cannot close socket");
+				}
 				Log.i(TAG, "exiting");
 				return;
 			}
 		}
-		
 	}
+	
+	on
 }
