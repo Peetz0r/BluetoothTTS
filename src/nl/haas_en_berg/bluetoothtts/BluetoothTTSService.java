@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import android.app.IntentService;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
@@ -12,6 +11,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 public class BluetoothTTSService extends IntentService {
@@ -129,7 +129,7 @@ public class BluetoothTTSService extends IntentService {
 		
 		Log.i(TAG, "Building notification");
 		
-		Notification.Builder builder = new Notification.Builder(this);
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
 		
 		Intent resultIntent = new Intent(this, BluetoothTTSMainActivity.class);
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
