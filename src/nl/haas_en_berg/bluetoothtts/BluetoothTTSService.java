@@ -74,6 +74,7 @@ public class BluetoothTTSService extends IntentService {
 		});
 		
 		btAdapter = BluetoothAdapter.getDefaultAdapter();
+		notifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		
 		if (btAdapter == null) {
 			Log.e(TAG, "Bluetooth not supported");
@@ -129,7 +130,7 @@ public class BluetoothTTSService extends IntentService {
 		
 		Log.i(TAG, "Building notification");
 		
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext());
 		
 		Intent resultIntent = new Intent(this, BluetoothTTSMainActivity.class);
 		PendingIntent resultPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -138,10 +139,6 @@ public class BluetoothTTSService extends IntentService {
 		builder.setSmallIcon(R.drawable.ic_stat_name);
 		builder.setContentText(device.getName());
 		builder.setContentTitle("");
-		builder.setOngoing(true);
-		
-		notifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		notifyMgr.notify(1, builder.build());
 		
 		Log.i(TAG, "Entering loop...");
 		
