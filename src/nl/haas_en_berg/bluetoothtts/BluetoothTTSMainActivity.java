@@ -143,7 +143,7 @@ public class BluetoothTTSMainActivity extends Activity {
 				spinnerArray.add(data);
 			}
 		}
-		SimpleAdapter adapter = new SimpleAdapter(this, spinnerArray, android.R.layout.two_line_list_item, new String[] { "name", "address" }, new int[] { android.R.id.text1, android.R.id.text2 });
+		SimpleAdapter adapter = new SimpleAdapter(this, spinnerArray, android.R.layout.simple_list_item_2, new String[] { "name", "address" }, new int[] { android.R.id.text1, android.R.id.text2 });
 		spinner.setAdapter(adapter);
 		spinner.setSelection(position);
 	}
